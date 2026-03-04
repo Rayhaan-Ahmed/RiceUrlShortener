@@ -1,1 +1,1 @@
-Temp file for dir. delete after adding actual files
+This is the base project for Atlink
