@@ -1,0 +1,5 @@
+Contributors: Nana, Chengwei (Backend Framework). Rayhaan (BigTable setup)
+Goals: Develop backend stubs for creating a short link and running a redirect from short link to long link
+For Bigtable, Establish base schema and create an example template for new link creations
+
+Optional: Develop stubs for auxillary calls such as user related ones.
