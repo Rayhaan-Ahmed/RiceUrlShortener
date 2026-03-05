@@ -1,0 +1,3 @@
+Contributor: Zhiheng
+
+Goals: Create a rough draft of the design document up to the current state of the project.
