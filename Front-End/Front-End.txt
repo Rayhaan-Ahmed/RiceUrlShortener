@@ -1,0 +1,5 @@
+Contributors: Zekai and Jiaxuan
+Goals: Develop a template for Atlink's front-end. The Minimum Viable Product should include an input for long links to be pasted into
+Upond a valid link being entered, the short link should be made visible in the page (use a placeholder string for now).
+
+Optional: Beautify the page using react to make it appear more user friendly.
