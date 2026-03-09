@@ -16,3 +16,5 @@ CONSIDERATIONS:
 
 Regional differences
 Premium user alias customization
+Since BigTable does not have a way to directly add columns, the final structure of the database will be handle in the backend calls to update information for each
+column family
