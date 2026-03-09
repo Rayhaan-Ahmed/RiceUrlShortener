@@ -1,6 +1,8 @@
 BIGTABLE STRUCTURE:
 
 Name: comp-539-team-1-urlmap
+Key structure: Use the randomly generated alias to represent the row key of each entry. This will ensure that information is relatively evenly distributed and will prevent
+bottleneck in the long term
 
 COLUMN FAMILIES:
 
@@ -9,8 +11,7 @@ version based policy: only can have 1 version of the analytics per row
 creator-info: Placeholder family to keep creator info if we need it for later queries. Version based policy identical to analytics
 ttl: Time To Live column indicates how long a row can exist before being removed for cleanup. set to one year.
 urlmapping: Tracks shorten alias to its long url redirect.
-Key structure: Use the randomly generated alias to represent the row key of each entry. This will ensure that information is relatively evenly distributed and will prevent
-bottleneck in the long term
+
 
 CONSIDERATIONS:
 
