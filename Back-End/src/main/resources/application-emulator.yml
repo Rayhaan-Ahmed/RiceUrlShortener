@@ -1,0 +1,10 @@
+app:
+  storage:
+    type: bigtable
+  bigtable:
+    project-id: emulator-project
+    instance-id: emulator-instance
+    link-table: comp-539-team-1-urlmap
+    creator-index-table: comp-539-team-1-links-by-creator
+    emulator-host: localhost
+    emulator-port: 8086
