@@ -1,3 +1,40 @@
 Contributor: Zhiheng
 
 Goals: Create a rough draft of the design document up to the current state of the project.
+
+Current architecture overview:
+
+Top-level directories:
+- Back-End/: Spring Boot service for URL creation, lookup, listing, and redirect. Includes Java source (src/), Maven build file (pom.xml), Bigtable emulator setup script (scripts/), and generated build output (target/).
+- Front-End/: React + TypeScript + Vite single-page app scaffold. Includes routes/layout/pages under src/, Node package config, and Vite/TypeScript/ESLint config files.
+- Documentation/: project notes and design references.
+- README.txt: short repository-level project note.
+
+Frontend, backend, and infrastructure split:
+- Frontend: Front-End/src (React Router pages and app shell).
+- Backend: Back-End/src/main/java and Back-End/src/main/resources (Spring MVC controllers, services, repositories, and config).
+- Infrastructure/config: Back-End/src/main/resources/application*.yml and Back-End/scripts/create-bigtable-emulator-tables.sh. These define storage mode, Redis host/port, and Bigtable or emulator configuration.
+
+Frontend/backend communication:
+- Intended backend API surface is in LinkController:
+  - POST /api/links
+  - GET /api/links/{alias}
+  - GET /api/links?creatorId=...&cursor=...&limit=...
+  - GET /r/{alias} (HTTP redirect)
+- Current frontend implementation is largely page scaffolding and does not yet include API client calls (no axios/fetch usage in src/ at this time).
+
+Service entry points:
+- Backend entry point: Back-End/src/main/java/edu/rice/atlink/backend/AtLinkBackendApplication.java
+- Frontend entry point: Front-End/src/main.tsx (mounts RouterProvider and QueryProvider)
+
+Redis and Bigtable integration status:
+- Redis integration exists:
+  - Dependency in Back-End/pom.xml (spring-boot-starter-data-redis)
+  - Cache implementation in RedisLinkCacheService using StringRedisTemplate with graceful fallback on connection failure
+  - Redis host/port configured in application.yml
+- Bigtable integration exists:
+  - Dependency in Back-End/pom.xml (google-cloud-bigtable)
+  - Conditional Bigtable client config in BigtableConfig
+  - Storage implementation in BigtableLinkRepository, enabled when app.storage.type=bigtable
+  - Emulator profile/settings in application-emulator.yml and setup script in Back-End/scripts/
+- Default storage remains in-memory via InMemoryLinkRepository when app.storage.type is memory (or unset).
