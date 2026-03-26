@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# Frontend Summary
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
 
-Currently, two official plugins are available:
+This frontend is the **management web application** for the URL shortener project.  
+It is responsible for the **management plane** of the system, including creating, browsing, and inspecting shortened links.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The frontend is **not part of the redirect hot path**.  
+Redirect requests should bypass the React frontend and go directly to backend services for low-latency handling.
 
-## React Compiler
+At the current stage, the frontend focuses on:
+- establishing the project structure
+- building the main management UI pages
+- preparing a clear codebase for future backend integration and demo usage
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **React**
+- **TypeScript**
+- **Vite**
+- **React Router**
+- **TanStack Query** (provider initialized for future API integration)
+- **Axios** (installed for future API calls)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Current Frontend Scope
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+The frontend currently represents the **management console** side of the URL shortener system.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Main responsibilities include:
+- landing / entry experience
+- dashboard UI
+- link creation form
+- link list management view
+- link detail view
+- shared layout and routing structure
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The frontend currently uses **mock / placeholder data** for UI development and does **not yet call backend APIs**.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## Project Structure
+
+```text
+Front-End/
+  public/
+  src/
+    app/
+      layout/
+        AppLayout.tsx
+      providers/
+        QueryProvider.tsx
+      router/
+        index.tsx
+    pages/
+      LandingPage/
+        index.tsx
+      DashboardPage/
+        index.tsx
+      CreateLinkPage/
+        index.tsx
+      LinksPage/
+        index.tsx
+      LinkDetailPage/
+        index.tsx
+      SettingsPage/
+        index.tsx
+    index.css
+    main.tsx
+  index.html
+  package.json
+  vite.config.ts
+  tsconfig.json
+  tsconfig.app.json
+  tsconfig.node.json
