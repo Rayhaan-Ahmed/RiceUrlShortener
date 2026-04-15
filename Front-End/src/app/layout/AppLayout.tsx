@@ -1,14 +1,17 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../providers/AuthProvider';
 
 const navItems = [
     { label: 'Dashboard', to: '/app/dashboard' },
     { label: 'Create', to: '/app/create' },
     { label: 'Links', to: '/app/links' },
-    { label: 'Settings', to: '/app/settings' },
+    { label: 'User Profile', to: '/app/settings' },
 ];
 
 export default function AppLayout() {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', background: '#f3f4f6' }}>
@@ -85,17 +88,36 @@ export default function AppLayout() {
                         </p>
                     </div>
 
-                    <div
-                        style={{
-                            padding: '10px 14px',
-                            borderRadius: 10,
-                            background: '#f9fafb',
-                            border: '1px solid #e5e7eb',
-                            fontSize: 14,
-                            color: '#374151',
-                        }}
-                    >
-                        Demo User
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div
+                            onClick={() => navigate('/app/settings')}
+                            style={{
+                                padding: '10px 14px',
+                                borderRadius: 10,
+                                background: '#f9fafb',
+                                border: '1px solid #e5e7eb',
+                                fontSize: 14,
+                                color: '#374151',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            {user?.name ?? user?.email ?? 'User'}
+                        </div>
+                        <button
+                            onClick={() => { logout(); navigate('/login'); }}
+                            style={{
+                                padding: '10px 14px',
+                                borderRadius: 10,
+                                background: 'transparent',
+                                border: '1px solid #e5e7eb',
+                                fontSize: 14,
+                                color: '#6b7280',
+                                cursor: 'pointer',
+                                fontWeight: 500,
+                            }}
+                        >
+                            Logout
+                        </button>
                     </div>
                 </header>
 

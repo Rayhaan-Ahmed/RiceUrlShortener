@@ -61,7 +61,7 @@ export default function LandingPage() {
 
                 <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
                     <Link
-                        to="/app/dashboard"
+                        to="/login"
                         style={{
                             display: 'inline-block',
                             padding: '12px 20px',
@@ -72,11 +72,11 @@ export default function LandingPage() {
                             fontWeight: 600,
                         }}
                     >
-                        Open Dashboard
+                        Sign In
                     </Link>
 
                     <Link
-                        to="/app/create"
+                        to="/signup"
                         style={{
                             display: 'inline-block',
                             padding: '12px 20px',
@@ -88,7 +88,7 @@ export default function LandingPage() {
                             fontWeight: 600,
                         }}
                     >
-                        Create a Link
+                        Get Started
                     </Link>
                 </div>
 
