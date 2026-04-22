@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useAuth } from '../../app/providers/AuthProvider';
 import { checkNameExists, checkEmailExists } from '../../services/authApi';
+import { getStoredCreatorId, setStoredCreatorId } from '../../lib/preferences';
 
 export default function SettingsPage() {
     const { user, updateProfile } = useAuth();
@@ -9,19 +10,20 @@ export default function SettingsPage() {
     const [email, setEmail] = useState(user?.email ?? '');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [creatorId, setCreatorId] = useState(getStoredCreatorId() || user?.name || '');
 
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+    const [creatorSaved, setCreatorSaved] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError('');
         setSuccess('');
 
         if (!user) return;
 
-        // Validate password match
         if (password && password !== confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -34,7 +36,6 @@ export default function SettingsPage() {
 
         setLoading(true);
         try {
-            // Check if name changed and already exists
             if (name !== user.name) {
                 const nameTaken = await checkNameExists(name, user.id);
                 if (nameTaken) {
@@ -44,7 +45,6 @@ export default function SettingsPage() {
                 }
             }
 
-            // Check if email changed and already exists
             if (email !== user.email) {
                 const emailTaken = await checkEmailExists(email, user.id);
                 if (emailTaken) {
@@ -54,7 +54,6 @@ export default function SettingsPage() {
                 }
             }
 
-            // Build update payload with only changed fields
             const updates: { name?: string; email?: string; password?: string } = {};
             if (name !== user.name) updates.name = name;
             if (email !== user.email) updates.email = email;
@@ -66,7 +65,6 @@ export default function SettingsPage() {
                 return;
             }
 
-            // Keep unchanged fields in the update so the mock API returns the full user
             await updateProfile({
                 name: updates.name ?? user.name,
                 email: updates.email ?? user.email,
@@ -81,132 +79,91 @@ export default function SettingsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }
 
-    const inputStyle: React.CSSProperties = {
-        width: '100%',
-        padding: '10px 12px',
-        borderRadius: 10,
-        border: '1px solid #d1d5db',
-        fontSize: 15,
-        outline: 'none',
-        boxSizing: 'border-box',
-    };
-
-    const labelStyle: React.CSSProperties = {
-        display: 'block',
-        marginBottom: 6,
-        fontSize: 14,
-        fontWeight: 500,
-        color: '#374151',
-    };
+    function handleCreatorSave(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setStoredCreatorId(creatorId);
+        setCreatorSaved(true);
+    }
 
     return (
-        <div>
-            <h2 style={{ margin: '0 0 4px', fontSize: 22, color: '#111827' }}>Settings</h2>
-            <p style={{ margin: '0 0 28px', fontSize: 14, color: '#6b7280' }}>
-                Manage your profile information
-            </p>
+        <section className="page">
+            <div className="page-header">
+                <div>
+                    <p className="eyebrow">Settings</p>
+                    <h1>Profile and frontend preferences</h1>
+                </div>
+            </div>
 
-            <div
-                style={{
-                    maxWidth: 520,
-                    background: '#ffffff',
-                    borderRadius: 16,
-                    padding: 32,
-                    border: '1px solid #e5e7eb',
-                }}
-            >
-                <h3 style={{ margin: '0 0 20px', fontSize: 17, color: '#111827' }}>
-                    Edit Profile
-                </h3>
+            <div className="two-column-layout">
+                <form className="panel form-panel" onSubmit={handleSubmit}>
+                    <h2>Edit profile</h2>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div>
-                        <label style={labelStyle}>Username</label>
+                    <label className="field">
+                        <span>Username</span>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                    </label>
+
+                    <label className="field">
+                        <span>Email</span>
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    </label>
+
+                    <label className="field">
+                        <span>New password</span>
                         <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            style={inputStyle}
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Leave blank to keep the current password"
                         />
-                    </div>
+                    </label>
 
-                    <div>
-                        <label style={labelStyle}>Email</label>
+                    <label className="field">
+                        <span>Confirm new password</span>
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={inputStyle}
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
                         />
-                    </div>
+                    </label>
 
-                    <div
-                        style={{
-                            borderTop: '1px solid #e5e7eb',
-                            paddingTop: 16,
-                            marginTop: 4,
-                        }}
-                    >
-                        <p style={{ margin: '0 0 12px', fontSize: 14, color: '#6b7280' }}>
-                            Leave password fields empty to keep your current password
-                        </p>
+                    {error ? <p className="error-text">{error}</p> : null}
+                    {success ? <p className="success-text">{success}</p> : null}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <div>
-                                <label style={labelStyle}>New Password</label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Enter new password"
-                                    style={inputStyle}
-                                />
-                            </div>
-
-                            <div>
-                                <label style={labelStyle}>Confirm New Password</label>
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirm new password"
-                                    style={inputStyle}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {error && (
-                        <p style={{ margin: 0, color: '#dc2626', fontSize: 14 }}>{error}</p>
-                    )}
-                    {success && (
-                        <p style={{ margin: 0, color: '#16a34a', fontSize: 14 }}>{success}</p>
-                    )}
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            padding: '12px 20px',
-                            borderRadius: 10,
-                            background: loading ? '#6b7280' : '#111827',
-                            color: '#ffffff',
-                            border: 'none',
-                            fontWeight: 600,
-                            fontSize: 15,
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            marginTop: 4,
-                            alignSelf: 'flex-start',
-                        }}
-                    >
-                        {loading ? 'Saving...' : 'Save Changes'}
+                    <button type="submit" className="button button-primary" disabled={loading}>
+                        {loading ? 'Saving...' : 'Save profile'}
                     </button>
                 </form>
+
+                <form className="panel form-panel" onSubmit={handleCreatorSave}>
+                    <h2>Link page preference</h2>
+
+                    <label className="field">
+                        <span>Default creator ID</span>
+                        <input
+                            type="text"
+                            value={creatorId}
+                            onChange={(event) => {
+                                setCreatorId(event.target.value);
+                                setCreatorSaved(false);
+                            }}
+                            placeholder="owner-1"
+                        />
+                    </label>
+
+                    <button type="submit" className="button button-primary">
+                        Save preference
+                    </button>
+
+                    <p className="muted-text">
+                        This value is stored in localStorage and pre-fills the create and list screens.
+                    </p>
+                    {creatorSaved ? <p className="success-text">Saved.</p> : null}
+                </form>
             </div>
-        </div>
+        </section>
     );
 }
