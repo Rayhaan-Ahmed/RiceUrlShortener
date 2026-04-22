@@ -1,35 +1,38 @@
-import { Link, Outlet } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
+
+const navItems = [
+    { to: '/app/dashboard', label: 'Dashboard' },
+    { to: '/app/create', label: 'Create' },
+    { to: '/app/links', label: 'Links' },
+    { to: '/app/settings', label: 'Settings' },
+];
 
 export default function AppLayout() {
     return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
-            <aside
-                style={{
-                    width: 220,
-                    background: '#111827',
-                    color: '#ffffff',
-                    padding: 16,
-                }}
-            >
-                <h2 style={{ marginTop: 0 }}>AtLink</h2>
+        <div className="app-shell">
+            <aside className="sidebar">
+                <div>
+                    <p className="eyebrow">Rice COMP 539</p>
+                    <h1 className="sidebar-title">AtLink</h1>
+                    <p className="sidebar-copy">
+                        MVP console for creating short links and checking stored aliases.
+                    </p>
+                </div>
 
-                <nav style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <Link to="/app/dashboard" style={{ color: '#ffffff', textDecoration: 'none' }}>
-                        Dashboard
-                    </Link>
-                    <Link to="/app/create" style={{ color: '#ffffff', textDecoration: 'none' }}>
-                        Create
-                    </Link>
-                    <Link to="/app/links" style={{ color: '#ffffff', textDecoration: 'none' }}>
-                        Links
-                    </Link>
-                    <Link to="/app/settings" style={{ color: '#ffffff', textDecoration: 'none' }}>
-                        Settings
-                    </Link>
+                <nav className="sidebar-nav">
+                    {navItems.map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            className={({ isActive }) => (isActive ? 'nav-link nav-link-active' : 'nav-link')}
+                        >
+                            {item.label}
+                        </NavLink>
+                    ))}
                 </nav>
             </aside>
 
-            <main style={{ flex: 1, padding: 24 }}>
+            <main className="main-content">
                 <Outlet />
             </main>
         </div>
