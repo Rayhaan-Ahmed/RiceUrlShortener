@@ -2,15 +2,16 @@ package edu.rice.atlink.backend.service;
 
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.Optional;
 
 @Service
 public class RedisLinkCacheService implements LinkCacheService {
 
-    private static final Duration CACHE_TTL = Duration.ofHours(1);
+    private static final Logger log = LoggerFactory.getLogger(RedisLinkCacheService.class);
 
     private final Optional<StringRedisTemplate> redisTemplate;
 
@@ -21,11 +22,19 @@ public class RedisLinkCacheService implements LinkCacheService {
     @Override
     public Optional<String> getLongUrl(String alias) {
         if (redisTemplate.isEmpty()) {
+            log.debug("Redis unavailable in application context; skipping cache lookup for alias={}", alias);
             return Optional.empty();
         }
         try {
-            return Optional.ofNullable(redisTemplate.get().opsForValue().get(cacheKey(alias)));
+            String cachedValue = redisTemplate.get().opsForValue().get(cacheKey(alias));
+            if (cachedValue == null) {
+                log.debug("Redis cache miss for alias={}", alias);
+            } else {
+                log.debug("Redis cache hit for alias={}", alias);
+            }
+            return Optional.ofNullable(cachedValue);
         } catch (RedisConnectionFailureException ex) {
+            log.warn("Redis connection failed during lookup for alias={}", alias);
             return Optional.empty();
         }
     }
@@ -33,11 +42,14 @@ public class RedisLinkCacheService implements LinkCacheService {
     @Override
     public void putLongUrl(String alias, String longUrl) {
         if (redisTemplate.isEmpty()) {
+            log.debug("Redis unavailable in application context; skipping cache write for alias={}", alias);
             return;
         }
         try {
-            redisTemplate.get().opsForValue().set(cacheKey(alias), longUrl, CACHE_TTL);
+            redisTemplate.get().opsForValue().set(cacheKey(alias), longUrl);
+            log.debug("Redis cache populated for alias={}", alias);
         } catch (RedisConnectionFailureException ignored) {
+            log.warn("Redis connection failed during cache write for alias={}", alias);
         }
     }
 

@@ -11,6 +11,8 @@ import com.google.cloud.bigtable.data.v2.models.RowCell;
 import com.google.cloud.bigtable.data.v2.models.RowMutation;
 import edu.rice.atlink.backend.config.BigtableProperties;
 import edu.rice.atlink.backend.model.LinkRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -31,6 +33,7 @@ public class BigtableLinkRepository implements LinkRepository {
     private static final String URL_FAMILY = "urlmapping";
     private static final String CREATOR_FAMILY = "creator-info";
     private static final String ANALYTICS_FAMILY = "analytics";
+    private static final Logger log = LoggerFactory.getLogger(BigtableLinkRepository.class);
 
     private final BigtableDataClient bigtableDataClient;
     private final BigtableProperties properties;
@@ -42,6 +45,7 @@ public class BigtableLinkRepository implements LinkRepository {
 
     @Override
     public Optional<LinkRecord> findByAlias(String alias) {
+        log.debug("Bigtable read for alias={}", alias);
         Row row = bigtableDataClient.readRow(properties.linkTable(), alias);
         return Optional.ofNullable(row).map(this::toLinkRecord);
     }
@@ -81,6 +85,7 @@ public class BigtableLinkRepository implements LinkRepository {
 
     @Override
     public boolean saveIfAbsent(LinkRecord record) {
+        log.debug("Bigtable conditional insert for alias={}", record.alias());
         Mutation mutation = Mutation.create()
                 .setCell(URL_FAMILY, "longUrl", record.longUrl())
                 .setCell(URL_FAMILY, "createdAt", record.createdAt().toString())
@@ -107,6 +112,7 @@ public class BigtableLinkRepository implements LinkRepository {
 
     @Override
     public void save(LinkRecord record) {
+        log.debug("Bigtable upsert for alias={}", record.alias());
         RowMutation mutation = RowMutation.create(properties.linkTable(), record.alias())
                 .setCell(URL_FAMILY, "longUrl", record.longUrl())
                 .setCell(URL_FAMILY, "createdAt", record.createdAt().toString())

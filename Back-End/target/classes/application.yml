@@ -1,21 +1,26 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   data:
     redis:
-      host: localhost
-      port: 6379
-      timeout: 1s
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: ${REDIS_TIMEOUT:1s}
 
 app:
-  base-url: http://localhost:8080
+  base-url: ${APP_BASE_URL:http://localhost:${server.port}}
   storage:
-    type: memory
+    type: ${APP_STORAGE_TYPE:bigtable}
   bigtable:
-    project-id: your-gcp-project-id
-    instance-id: your-bigtable-instance-id
-    link-table: comp-539-team-1-urlmap
-    creator-index-table: comp-539-team-1-links-by-creator
-    emulator-host:
-    emulator-port:
+    project-id: ${BIGTABLE_PROJECT_ID:}
+    instance-id: ${BIGTABLE_INSTANCE_ID:}
+    link-table: ${BIGTABLE_LINK_TABLE:comp-539-team-1-urlmap}
+    creator-index-table: ${BIGTABLE_CREATOR_INDEX_TABLE:comp-539-team-1-links-by-creator}
+    emulator-host: ${BIGTABLE_EMULATOR_HOST:}
+    emulator-port: ${BIGTABLE_EMULATOR_PORT:}
+
+logging:
+  level:
+    edu.rice.atlink.backend.repository.BigtableLinkRepository: DEBUG
+    edu.rice.atlink.backend.service.RedisLinkCacheService: DEBUG

@@ -2,7 +2,6 @@ package edu.rice.atlink.backend.repository;
 
 import edu.rice.atlink.backend.model.LinkRecord;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.util.Comparator;
@@ -11,8 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-@Primary
-@ConditionalOnProperty(name = "app.storage.type", havingValue = "memory", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "memory")
 public class InMemoryLinkRepository implements LinkRepository {
 
     private final ConcurrentHashMap<String, LinkRecord> linksByAlias = new ConcurrentHashMap<>();
