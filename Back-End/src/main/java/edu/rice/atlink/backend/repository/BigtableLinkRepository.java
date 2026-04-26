@@ -33,6 +33,7 @@ public class BigtableLinkRepository implements LinkRepository {
     private static final String URL_FAMILY = "urlmapping";
     private static final String CREATOR_FAMILY = "creator-info";
     private static final String ANALYTICS_FAMILY = "analytics";
+    private static final String TTL_FAMILY = "ttl";
     private static final Logger log = LoggerFactory.getLogger(BigtableLinkRepository.class);
 
     private final BigtableDataClient bigtableDataClient;
@@ -92,22 +93,25 @@ public class BigtableLinkRepository implements LinkRepository {
                 .setCell(ANALYTICS_FAMILY, "clickCount", Long.toString(record.clickCount()));
 
         if (record.expiresAt() != null) {
-            mutation.setCell(URL_FAMILY, "expiresAt", record.expiresAt().toString());
+            mutation.setCell(TTL_FAMILY, "expiresAt", record.expiresAt().toString());
         }
         if (record.creatorId() != null) {
             mutation.setCell(CREATOR_FAMILY, "creatorId", record.creatorId());
         }
 
-        boolean created = bigtableDataClient.checkAndMutateRow(
+        boolean rowExists = bigtableDataClient.checkAndMutateRow(
                 ConditionalRowMutation.create(properties.linkTable(), record.alias())
                         .condition(Filters.FILTERS.limit().cellsPerRow(1))
                         .otherwise(mutation)
         );
 
-        if (created && record.creatorId() != null) {
+        boolean successfullyCreated = !rowExists;
+
+        // Restore the index mutation call here
+        if (successfullyCreated && record.creatorId() != null) {
             bigtableDataClient.mutateRow(buildCreatorIndexMutation(record));
         }
-        return created;
+        return successfullyCreated;
     }
 
     @Override
@@ -119,10 +123,11 @@ public class BigtableLinkRepository implements LinkRepository {
                 .setCell(ANALYTICS_FAMILY, "clickCount", Long.toString(record.clickCount()));
 
         if (record.expiresAt() != null) {
-            mutation.setCell(URL_FAMILY, "expiresAt", record.expiresAt().toString());
+            mutation.setCell(TTL_FAMILY, "expiresAt", record.expiresAt().toString());
         }
         if (record.creatorId() != null) {
             mutation.setCell(CREATOR_FAMILY, "creatorId", record.creatorId());
+            // Restore the index mutation call here
             bigtableDataClient.mutateRow(buildCreatorIndexMutation(record));
         }
 
