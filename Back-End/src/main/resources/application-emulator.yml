@@ -5,6 +5,7 @@ app:
     project-id: emulator-project
     instance-id: emulator-instance
     link-table: comp-539-team-1-urlmap
-    creator-index-table: comp-539-team-1-users
+    creator-index-table: comp-539-team-1-creator-index
+    user-table: comp-539-team-1-users
     emulator-host: localhost
     emulator-port: 8086

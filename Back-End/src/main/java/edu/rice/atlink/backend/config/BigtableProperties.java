@@ -8,6 +8,7 @@ public record BigtableProperties(
         String instanceId,
         String linkTable,
         String creatorIndexTable,
+        String userTable,
         String emulatorHost,
         Integer emulatorPort
 ) {

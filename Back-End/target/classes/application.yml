@@ -17,6 +17,7 @@ app:
     instance-id: ${BIGTABLE_INSTANCE_ID:}
     link-table: ${BIGTABLE_LINK_TABLE:comp-539-team-1-urlmap}
     creator-index-table: ${BIGTABLE_CREATOR_INDEX_TABLE:comp-539-team-1-creator-index}
+    user-table: ${BIGTABLE_USER_TABLE:comp-539-team-1-users}
     emulator-host: ${BIGTABLE_EMULATOR_HOST:}
     emulator-port: ${BIGTABLE_EMULATOR_PORT:}
 
