@@ -105,6 +105,7 @@ require_command curl
 require_command gcloud
 require_command java
 require_command mvn
+require_command node
 require_command npm
 require_command docker
 
@@ -133,7 +134,7 @@ EMULATOR_PID=$!
 wait_for_tcp "$BIGTABLE_HOST" "$BIGTABLE_PORT" "Bigtable emulator"
 
 log "Starting backend with emulator profile"
-setsid bash -c 'cd "$1" && SPRING_PROFILES_ACTIVE=emulator java -jar target/atlink-backend-0.0.1-SNAPSHOT.jar' bash "$BACKEND_DIR" \
+setsid bash -c 'cd "$1" && SPRING_PROFILES_ACTIVE=emulator RATE_LIMIT_LOGIN_PER_MINUTE="${RATE_LIMIT_LOGIN_PER_MINUTE:-2}" java -jar target/atlink-backend-0.0.1-SNAPSHOT.jar' bash "$BACKEND_DIR" \
   >"$TMP_DIR/backend.log" 2>&1 &
 BACKEND_PID=$!
 wait_for_tcp 127.0.0.1 "$BACKEND_PORT" "Backend"
@@ -146,6 +147,7 @@ status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/auth/r
   -H 'Content-Type: application/json' \
   -d "{\"username\":\"$user\",\"email\":\"$user@example.com\",\"password\":\"password123\"}")"
 assert_status 201 "$status" "Register"
+token="$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8')).token)" "$body")"
 
 body="$TMP_DIR/login.json"
 status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/auth/login" \
@@ -153,14 +155,43 @@ status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/auth/l
   -d "{\"username\":\"$user\",\"password\":\"password123\"}")"
 assert_status 200 "$status" "Login"
 
+rate_ip="198.51.100.$(( ($(date +%s) % 200) + 1 ))"
+body="$TMP_DIR/rate-login-1.json"
+status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/auth/login" \
+  -H 'Content-Type: application/json' \
+  -H "X-Forwarded-For: $rate_ip" \
+  -d "{\"username\":\"missing-$user\",\"password\":\"password123\"}")"
+assert_status 400 "$status" "Login rate limit first request"
+
+body="$TMP_DIR/rate-login-2.json"
+status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/auth/login" \
+  -H 'Content-Type: application/json' \
+  -H "X-Forwarded-For: $rate_ip" \
+  -d "{\"username\":\"missing-$user\",\"password\":\"password123\"}")"
+assert_status 400 "$status" "Login rate limit second request"
+
+body="$TMP_DIR/rate-login-3.json"
+status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/auth/login" \
+  -H 'Content-Type: application/json' \
+  -H "X-Forwarded-For: $rate_ip" \
+  -d "{\"username\":\"missing-$user\",\"password\":\"password123\"}")"
+assert_status 429 "$status" "Login rate limit third request"
+
+body="$TMP_DIR/create-unauthorized.json"
+status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/links" \
+  -H 'Content-Type: application/json' \
+  -d "{\"longUrl\":\"https://www.rice.edu\",\"customAlias\":\"unauth$alias\"}")"
+assert_status 403 "$status" "Unauthenticated create link"
+
 body="$TMP_DIR/create.json"
 status="$(http_status "$body" -X POST "http://127.0.0.1:$BACKEND_PORT/api/links" \
   -H 'Content-Type: application/json' \
-  -d "{\"longUrl\":\"https://www.rice.edu\",\"customAlias\":\"$alias\",\"creatorId\":\"$user\",\"expiresAt\":\"2026-12-31T23:59:59Z\"}")"
+  -H "Authorization: Bearer $token" \
+  -d "{\"longUrl\":\"https://www.rice.edu\",\"customAlias\":\"$alias\",\"expiresAt\":\"2026-12-31T23:59:59Z\"}")"
 assert_status 201 "$status" "Create link"
 
 body="$TMP_DIR/list.json"
-status="$(http_status "$body" "http://127.0.0.1:$BACKEND_PORT/api/links?creatorId=$user&limit=20")"
+status="$(http_status "$body" -H "Authorization: Bearer $token" "http://127.0.0.1:$BACKEND_PORT/api/links?limit=20")"
 assert_status 200 "$status" "List links"
 
 body="$TMP_DIR/get.json"
@@ -197,7 +228,8 @@ proxy_alias="proxy$(date +%s)"
 body="$TMP_DIR/proxy-create.json"
 status="$(http_status "$body" -X POST "http://127.0.0.1:$FRONTEND_PORT/api/links" \
   -H 'Content-Type: application/json' \
-  -d "{\"longUrl\":\"https://www.rice.edu\",\"customAlias\":\"$proxy_alias\",\"creatorId\":\"frontend-proxy\"}")"
+  -H "Authorization: Bearer $token" \
+  -d "{\"longUrl\":\"https://www.rice.edu\",\"customAlias\":\"$proxy_alias\"}")"
 assert_status 201 "$status" "Frontend proxy create link"
 
 body="$TMP_DIR/frontend.html"

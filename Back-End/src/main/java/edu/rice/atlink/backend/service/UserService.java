@@ -9,16 +9,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, JwtService jwtService) {
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
@@ -37,7 +38,7 @@ public class UserService {
             throw new IllegalArgumentException("Username already exists");
         }
 
-        String token = generateToken(newUser);
+        String token = jwtService.generateToken(newUser);
         return new AuthResponse(newUser.username(), newUser.email(), token);
     }
 
@@ -49,11 +50,7 @@ public class UserService {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
-        String token = generateToken(user);
+        String token = jwtService.generateToken(user);
         return new AuthResponse(user.username(), user.email(), token);
-    }
-
-    private String generateToken(UserRecord user) {
-        return UUID.randomUUID().toString() + "-placeholder-token";
     }
 }

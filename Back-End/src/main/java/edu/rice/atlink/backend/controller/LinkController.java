@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,8 +29,8 @@ public class LinkController {
     }
 
     @PostMapping("/api/links")
-    public ResponseEntity<LinkResponse> createLink(@Valid @RequestBody CreateLinkRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(linkService.createLink(request));
+    public ResponseEntity<LinkResponse> createLink(@Valid @RequestBody CreateLinkRequest request, Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(linkService.createLink(request, authentication.getName()));
     }
 
     @GetMapping("/api/links/{alias}")
@@ -39,11 +40,11 @@ public class LinkController {
 
     @GetMapping("/api/links")
     public LinkListResponse listLinks(
-            @RequestParam String creatorId,
             @RequestParam(required = false) String cursor,
-            @RequestParam(defaultValue = "20") int limit
+            @RequestParam(defaultValue = "20") int limit,
+            Authentication authentication
     ) {
-        return linkService.listLinks(creatorId, cursor, limit);
+        return linkService.listLinks(authentication.getName(), cursor, limit);
     }
 
     @GetMapping("/r/{alias}")

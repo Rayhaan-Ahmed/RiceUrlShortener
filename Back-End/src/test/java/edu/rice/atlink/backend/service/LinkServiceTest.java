@@ -32,9 +32,10 @@ class LinkServiceTest {
                 null,
                 "creator-1",
                 null
-        ));
+        ), "auth-user");
 
         assertEquals(7, response.alias().length());
+        assertEquals("auth-user", response.creatorId());
         assertTrue(response.shortUrl().endsWith("/r/" + response.alias()));
     }
 
@@ -45,7 +46,7 @@ class LinkServiceTest {
                 "future1",
                 "creator-1",
                 Instant.now().plus(1, ChronoUnit.SECONDS).toString()
-        ));
+        ), "creator-1");
 
         assertEquals("future1", response.alias());
 
@@ -56,8 +57,8 @@ class LinkServiceTest {
 
     @Test
     void listLinksReturnsNextCursorWhenTruncated() {
-        linkService.createLink(new CreateLinkRequest("https://a.example", "alias-1", "creator-2", null));
-        linkService.createLink(new CreateLinkRequest("https://b.example", "alias-2", "creator-2", null));
+        linkService.createLink(new CreateLinkRequest("https://a.example", "alias-1", "ignored", null), "creator-2");
+        linkService.createLink(new CreateLinkRequest("https://b.example", "alias-2", "ignored", null), "creator-2");
 
         LinkListResponse page = linkService.listLinks("creator-2", null, 1);
 

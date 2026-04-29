@@ -38,7 +38,7 @@ public class LinkService {
         this.appProperties = appProperties;
     }
 
-    public LinkResponse createLink(CreateLinkRequest request) {
+    public LinkResponse createLink(CreateLinkRequest request, String username) {
         Instant now = Instant.now();
         Instant expiresAt = parseExpiry(request.expiresAt());
         if (expiresAt != null && !expiresAt.isAfter(now)) {
@@ -52,7 +52,7 @@ public class LinkService {
         LinkRecord record = new LinkRecord(
                 alias,
                 normalizeUrl(request.longUrl()),
-                emptyToNull(request.creatorId()),
+                username,
                 now,
                 expiresAt,
                 0
@@ -71,14 +71,14 @@ public class LinkService {
         return toResponse(requireActiveLink(alias));
     }
 
-    public LinkListResponse listLinks(String creatorId, String cursor, int limit) {
-        if (!StringUtils.hasText(creatorId)) {
-            throw new IllegalArgumentException("creatorId query parameter is required");
+    public LinkListResponse listLinks(String username, String cursor, int limit) {
+        if (!StringUtils.hasText(username)) {
+            throw new IllegalArgumentException("Authenticated username is required");
         }
         if (limit < 1 || limit > 100) {
             throw new IllegalArgumentException("limit must be between 1 and 100");
         }
-        LinkPage page = linkRepository.findPageByCreatorId(creatorId, cursor, limit);
+        LinkPage page = linkRepository.findPageByCreatorId(username, cursor, limit);
         List<LinkResponse> items = page.items().stream()
                 .map(this::toResponse)
                 .toList();
@@ -168,7 +168,4 @@ public class LinkService {
         }
     }
 
-    private String emptyToNull(String value) {
-        return StringUtils.hasText(value) ? value : null;
-    }
 }

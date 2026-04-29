@@ -16,7 +16,6 @@ export type LinkListResponse = {
 export type CreateLinkPayload = {
     longUrl: string;
     customAlias?: string;
-    creatorId?: string;
     expiresAt?: string;
 };
 
@@ -25,16 +24,29 @@ type ApiErrorPayload = {
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() ?? '';
+const TOKEN_KEY = 'atlink_token';
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const headers = new Headers(init?.headers);
-    if (init?.body && !headers.has('Content-Type')) {
+function getAuthToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+}
+
+async function request<T>(path: string, init?: RequestInit & { auth?: boolean }): Promise<T> {
+    const { auth, ...requestInit } = init ?? {};
+    const headers = new Headers(requestInit.headers);
+    if (requestInit.body && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
+    }
+    if (auth) {
+        const token = getAuthToken();
+        if (!token) {
+            throw new Error('You must be logged in to perform this action');
+        }
+        headers.set('Authorization', `Bearer ${token}`);
     }
 
     const response = await fetch(`${API_BASE_URL}${path}`, {
         headers,
-        ...init,
+        ...requestInit,
     });
 
     if (!response.ok) {
@@ -63,6 +75,7 @@ export async function createLink(payload: CreateLinkPayload): Promise<LinkRespon
     return request<LinkResponse>('/api/links', {
         method: 'POST',
         body: JSON.stringify(payload),
+        auth: true,
     });
 }
 
@@ -70,10 +83,10 @@ export async function getLink(alias: string): Promise<LinkResponse> {
     return request<LinkResponse>(`/api/links/${encodeURIComponent(alias)}`);
 }
 
-export async function listLinks(creatorId: string, cursor?: string | null, limit = 20): Promise<LinkListResponse> {
-    const params = new URLSearchParams({ creatorId, limit: String(limit) });
+export async function listLinks(cursor?: string | null, limit = 20): Promise<LinkListResponse> {
+    const params = new URLSearchParams({ limit: String(limit) });
     if (cursor) {
         params.set('cursor', cursor);
     }
-    return request<LinkListResponse>(`/api/links?${params.toString()}`);
+    return request<LinkListResponse>(`/api/links?${params.toString()}`, { auth: true });
 }

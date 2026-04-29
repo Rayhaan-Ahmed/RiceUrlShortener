@@ -1,13 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useAuth } from '../../app/providers/AuthProvider';
 import { createLink, type LinkResponse } from '../../lib/api';
-import { getStoredCreatorId, setStoredCreatorId } from '../../lib/preferences';
 
 type FormState = {
     longUrl: string;
     customAlias: string;
-    creatorId: string;
     expiresAt: string;
 };
 
@@ -20,11 +17,9 @@ function toIsoString(value: string): string | undefined {
 }
 
 export default function CreateLinkPage() {
-    const { user } = useAuth();
     const [formState, setFormState] = useState<FormState>({
         longUrl: '',
         customAlias: '',
-        creatorId: getStoredCreatorId() || user?.name || '',
         expiresAt: '',
     });
     const [createdLink, setCreatedLink] = useState<LinkResponse | null>(null);
@@ -34,12 +29,10 @@ export default function CreateLinkPage() {
             createLink({
                 longUrl: formState.longUrl.trim(),
                 customAlias: formState.customAlias.trim() || undefined,
-                creatorId: formState.creatorId.trim() || undefined,
                 expiresAt: toIsoString(formState.expiresAt),
             }),
         onSuccess: (response) => {
             setCreatedLink(response);
-            setStoredCreatorId(formState.creatorId);
         },
     });
 
@@ -85,16 +78,6 @@ export default function CreateLinkPage() {
                             placeholder="Optional, 4-32 chars"
                             value={formState.customAlias}
                             onChange={(event) => updateField('customAlias', event.target.value)}
-                        />
-                    </label>
-
-                    <label className="field">
-                        <span>Creator ID</span>
-                        <input
-                            type="text"
-                            placeholder="team-member-id"
-                            value={formState.creatorId}
-                            onChange={(event) => updateField('creatorId', event.target.value)}
                         />
                     </label>
 
