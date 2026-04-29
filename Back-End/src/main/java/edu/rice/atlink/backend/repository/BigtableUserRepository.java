@@ -7,6 +7,7 @@ import com.google.cloud.bigtable.data.v2.models.Mutation;
 import com.google.cloud.bigtable.data.v2.models.Row;
 import edu.rice.atlink.backend.config.BigtableProperties;
 import edu.rice.atlink.backend.model.UserRecord;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -15,7 +16,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-public class BigtableUserRepository {
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "bigtable")
+public class BigtableUserRepository implements UserRepository {
 
     private static final String USER_FAMILY = "user";
     private static final String EMAIL_FAMILY = "email";
@@ -29,6 +31,7 @@ public class BigtableUserRepository {
         this.properties = properties;
     }
 
+    @Override
     public Optional<UserRecord> findByUsername(String username) {
         Row row = bigtableDataClient.readRow(properties.userTable(), username);
         if (row == null) return Optional.empty();
@@ -48,6 +51,7 @@ public class BigtableUserRepository {
         ));
     }
 
+    @Override
     public boolean saveIfAbsent(UserRecord record) {
         Mutation mutation = Mutation.create()
                 .setCell(USER_FAMILY, "username", record.username())

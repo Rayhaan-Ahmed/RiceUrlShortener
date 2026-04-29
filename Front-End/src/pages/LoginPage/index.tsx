@@ -6,7 +6,7 @@ export default function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export default function LoginPage() {
         setError('');
         setLoading(true);
         try {
-            await login({ email, password });
+            await login({ email: username, password });
             navigate('/app/dashboard');
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Login failed');
@@ -64,12 +64,12 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500, color: '#374151' }}>
-                            Email
+                            Username
                         </label>
                         <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             required
                             style={{
                                 width: '100%',
