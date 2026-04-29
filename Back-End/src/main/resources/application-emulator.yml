@@ -2,6 +2,7 @@ app:
   storage:
     type: bigtable
   bigtable:
+    initialize-tables: true
     project-id: emulator-project
     instance-id: emulator-instance
     link-table: comp-539-team-1-urlmap

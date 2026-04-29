@@ -65,7 +65,7 @@ export default function SignupPage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500, color: '#374151' }}>
-                            Name
+                            Username
                         </label>
                         <input
                             type="text"

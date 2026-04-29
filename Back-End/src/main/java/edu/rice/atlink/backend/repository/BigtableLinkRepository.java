@@ -152,7 +152,7 @@ public class BigtableLinkRepository implements LinkRepository {
         String longUrl = values.get(URL_FAMILY + ":longUrl");
         String creatorId = values.get(CREATOR_FAMILY + ":creatorId");
         Instant createdAt = Instant.parse(values.get(URL_FAMILY + ":createdAt"));
-        String expiresAtRaw = values.get(URL_FAMILY + ":expiresAt");
+        String expiresAtRaw = values.get(TTL_FAMILY + ":expiresAt");
         Instant expiresAt = expiresAtRaw == null ? null : Instant.parse(expiresAtRaw);
         long clickCount = Long.parseLong(values.getOrDefault(ANALYTICS_FAMILY + ":clickCount", "0"));
 
