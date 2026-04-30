@@ -57,7 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String bearerToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader("X-AtLink-Authorization");
+        boolean proxiedRequest = StringUtils.hasText(request.getHeader("X-AtLink-Proxy"));
+        if (!StringUtils.hasText(header) && !proxiedRequest) {
+            header = request.getHeader("Authorization");
+        }
         if (!StringUtils.hasText(header) || !header.startsWith("Bearer ")) {
             return null;
         }

@@ -1,11 +1,15 @@
 package edu.rice.atlink.backend.controller;
 
+import edu.rice.atlink.backend.model.UserRecord;
+import edu.rice.atlink.backend.service.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,15 +25,18 @@ class LinkControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private JwtService jwtService;
+
     @Test
     void createLinkAndRedirect() throws Exception {
         mockMvc.perform(post("/api/links")
+                        .header("Authorization", bearerToken("nana"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "longUrl": "https://www.rice.edu",
-                                  "customAlias": "rice123",
-                                  "creatorId": "nana"
+                                  "customAlias": "rice123"
                                 }
                                 """))
                 .andExpect(status().isCreated())
@@ -55,38 +62,47 @@ class LinkControllerTest {
                 """;
 
         mockMvc.perform(post("/api/links")
+                        .header("Authorization", bearerToken("atlas-owner"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/links")
+                        .header("Authorization", bearerToken("atlas-owner"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isConflict());
     }
 
     @Test
-    void listLinksRequiresCreatorId() throws Exception {
+    void listLinksRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/links"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void listLinksReturnsCursorPayload() throws Exception {
         mockMvc.perform(post("/api/links")
+                        .header("Authorization", bearerToken("owner-1"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "longUrl": "https://www.example.com/one",
-                                  "customAlias": "creator-a",
-                                  "creatorId": "owner-1"
+                                  "customAlias": "creator-a"
                                 }
                                 """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/links").param("creatorId", "owner-1").param("limit", "10"))
+        mockMvc.perform(get("/api/links")
+                        .header("Authorization", bearerToken("owner-1"))
+                        .param("limit", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].alias").value("creator-a"))
                 .andExpect(jsonPath("$.nextCursor").value(nullValue()));
+    }
+
+    private String bearerToken(String username) {
+        UserRecord user = new UserRecord(username, username + "@example.com", "hash", Instant.now());
+        return "Bearer " + jwtService.generateToken(user);
     }
 }
