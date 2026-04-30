@@ -31,3 +31,5 @@ Thumbs.db
 .vscode/
 
 self_eval/
+.vercel
+.env*.local
